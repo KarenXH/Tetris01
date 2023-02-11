@@ -49,7 +49,8 @@ public class Board : MonoBehaviour
         {
             GameOver();
         }
-        Set(this.activePiece);
+
+       
     }
     private void GameOver()
     {
