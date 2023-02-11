@@ -8,12 +8,21 @@ public class Piece : MonoBehaviour
     public Vector3Int position { get; private set; }
     public int rotationIndex { get; private set; }
 
+    public float stepDelay = 1f;
+    public float lockDelay = 0.5f;
+
+    private float _stepTime;
+    private float _lockTime;
+
     public void Initialize(Board board,Vector3Int position, TetrominoData data)
     {
         this.board = board;
         this.position = position;
         this.data = data;
         this.rotationIndex = 0;
+
+        this._stepTime = Time.time + this.stepDelay;
+        this._lockTime = 0f;
 
         if(this.cells == null)
         {
@@ -30,9 +39,33 @@ public class Piece : MonoBehaviour
     {
         this.board.Clear(this);
 
+        this._lockTime += Time.deltaTime;
+
         this.Movement();
 
+        if(Time.time >= this._stepTime)
+        {
+            Step();
+        }
+
         this.board.Set(this);
+    }
+    private void Step()
+    {
+        this._stepTime = Time.time + this.stepDelay;
+
+        Move(Vector2Int.down);
+
+        if(this._lockTime >= this.lockDelay)
+        {
+            Lock();
+        }
+    }
+    void Lock()
+    {
+        this.board.Set(this);
+        this.board.ClearLines();
+        this.board.SpawnPiece();
     }
     private void Movement()
     {
@@ -68,8 +101,9 @@ public class Piece : MonoBehaviour
     {
         while (Move(Vector2Int.down))
         {
-            continue;
+            continue;            
         }
+        Lock();
     }
 
     private bool Move(Vector2Int translation)
@@ -83,6 +117,7 @@ public class Piece : MonoBehaviour
         if (valid)
         {
             this.position = newPosition;
+            this._lockTime = 0f;
         }
         return valid;
     }
