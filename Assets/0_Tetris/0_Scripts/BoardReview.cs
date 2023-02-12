@@ -1,17 +1,16 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class Board : MonoBehaviour
+public class BoardReview : Singleton<BoardReview>
 {
-    public Tilemap tilemap { get; private set; }    
-    public Piece activePiece { get; private set; }
+    public Tilemap tilemap { get; private set; }
+    public PieceReview activePiece { get; private set; }
     public TetrominoData[] tetrominos;
     public Vector3Int spawnPosition;
     public Vector2Int boardSize = new Vector2Int(7, 17);
-
-    int firstSpawn;
-    TetrominoData data;
-
+       
     public RectInt Bounds
     {
         get
@@ -20,69 +19,91 @@ public class Board : MonoBehaviour
             return new RectInt(position, this.boardSize);
         }
     }
+
+   
+
+    public int nextFirst;
+    public int nextSecond;
+    public int nextThird;
+    [SerializeField] private BoardReview _instance;
+    public BoardReview Instance { get => _instance; set => _instance = value; }
+
+
     public void Awake()
     {
+        if (_instance == null)
+            _instance = FindObjectOfType(typeof(BoardReview)) as BoardReview;
+
         this.tilemap = GetComponentInChildren<Tilemap>();
-        this.activePiece = GetComponentInChildren<Piece>();
+        this.activePiece = GetComponentInChildren<PieceReview>();
 
         for (int i = 0; i < this.tetrominos.Length; i++)
         {
             this.tetrominos[i].Initialize();
         }
+        this.NextPiece();
     }
 
-    public void Start()
-    {
-        firstSpawn = Random.Range(0, this.tetrominos.Length);
-        data = this.tetrominos[firstSpawn];
+
+    public void LateUpdate()
+    {        
         this.SpawnPiece();
-    }    
-    
+    }
+    void NextPiece()
+    {
+        nextFirst = Random.Range(0, this.tetrominos.Length);
+        nextSecond = Random.Range(0, this.tetrominos.Length);
+        nextThird = Random.Range(0, this.tetrominos.Length);        
+    }
+    public void ResetNextPiece()
+    {
+        nextFirst = nextSecond;
+        nextSecond = nextThird;
+        nextThird = Random.Range(0, this.tetrominos.Length);
+        this.GameOver();
+    }
+
     public void SpawnPiece()
-    {
-        this.activePiece.Initialize(this, this.spawnPosition, data);
+    {       
+        TetrominoData data1 = this.tetrominos[nextFirst];
+        TetrominoData data2 = this.tetrominos[nextSecond];
+        TetrominoData data3 = this.tetrominos[nextThird];
+                
+        this.activePiece.Initialize(this, new Vector3Int(this.spawnPosition.x, this.spawnPosition.y-0, 0), data1);
+        Set(this.activePiece);
+        this.activePiece.Initialize(this, new Vector3Int(this.spawnPosition.x, this.spawnPosition.y-4, 0), data2);
+        Set(this.activePiece);
+        this.activePiece.Initialize(this, new Vector3Int(this.spawnPosition.x, this.spawnPosition.y-8, 0), data3);
+        Set(this.activePiece);
 
-        if (IsValidPosition(this.activePiece, this.spawnPosition)){
-            Set(this.activePiece);            
-            BoardReview.Ins.ResetNextPiece();
-            data = this.tetrominos[BoardReview.Ins.nextFirst];
-        }
-        else
-        {
-            GameOver();            
-            BoardReview.Ins.GameOver();
-           
-        }
 
-       
+
+
     }
-    private void GameOver()
-    {
-        this.tilemap.ClearAllTiles();
-    }
+    
 
-    public void Set(Piece piece)
+    public void Set(PieceReview piece)
     {
         for (int i = 0; i < piece.cells.Length; i++)
-        {           
+        {
             Vector3Int tilePosition = piece.cells[i] + piece.position;
             this.tilemap.SetTile(tilePosition, piece.data.tile);
         }
     }
-    public void Clear(Piece piece)
+    public void Clear(PieceReview piece)
     {
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + piece.position;
-            this.tilemap.SetTile(tilePosition,null);
+            this.tilemap.SetTile(tilePosition, null);
         }
     }
 
-    public bool IsValidPosition(Piece piece, Vector3Int position)
+    public bool IsValidPosition(PieceReview piece, Vector3Int position)
     {
         RectInt bounds = this.Bounds;
 
-        for (int i =0; i < piece.cells.Length; i++)
+        for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + position;
 
@@ -143,18 +164,25 @@ public class Board : MonoBehaviour
             this.tilemap.SetTile(position, null);
         }
 
-        while(row < bounds.yMax)
+        while (row < bounds.yMax)
         {
             for (int col = bounds.xMin; col < bounds.xMax; col++)
             {
-                Vector3Int position = new Vector3Int(col, row +1, 0);
+                Vector3Int position = new Vector3Int(col, row + 1, 0);
                 TileBase above = this.tilemap.GetTile(position);
 
                 position = new Vector3Int(col, row, 0);
                 this.tilemap.SetTile(position, above);
             }
-            row ++;
+            row++;
         }
     }
 
+
+    public void GameOver()
+    {
+        this.tilemap.ClearAllTiles();
+    }
+
 }
+

@@ -1,71 +1,71 @@
 using UnityEngine;
 
-public class Piece : MonoBehaviour
+public class PieceReview : MonoBehaviour
 {
-    public Board board { get; private set; }
-    public TetrominoData data { get; private set; }    
+    public BoardReview boardReview { get; private set; }
+    public TetrominoData data { get; private set; }
     public Vector3Int[] cells { get; private set; }
     public Vector3Int position { get; private set; }
     public int rotationIndex { get; private set; }
 
-    public float stepDelay = 1f;
+/*    public float stepDelay = 1f;
     public float lockDelay = 0.5f;
 
     private float _stepTime;
-    private float _lockTime;
+    private float _lockTime;*/
 
-    public void Initialize(Board board,Vector3Int position, TetrominoData data)
+    public void Initialize(BoardReview board, Vector3Int position, TetrominoData data)
     {
-        this.board = board;
+        this.boardReview = board;
         this.position = position;
         this.data = data;
         this.rotationIndex = 0;
 
-        this._stepTime = Time.time + this.stepDelay;
-        this._lockTime = 0f;
+       /* this._stepTime = Time.time + this.stepDelay;
+        this._lockTime = 0f;*/
 
-        if(this.cells == null)
+        if (this.cells == null)
         {
             this.cells = new Vector3Int[data.cells.Length]; //4 blocks
         }
 
-        for(int i = 0; i< data.cells.Length; i++)
+        for (int i = 0; i < data.cells.Length; i++)
         {
-            this.cells[i] = (Vector3Int) data.cells[i];
+            this.cells[i] = (Vector3Int)data.cells[i];
         }
     }
 
-    public void Update()
+    /*public void Update()
     {
-        this.board.Clear(this);
+       // this.boardReview.Clear(this);
 
-        this._lockTime += Time.deltaTime;
+        //this._lockTime += Time.deltaTime;
 
-        this.Movement();
+        //this.Movement();
 
-        if(Time.time >= this._stepTime)
+        *//*if (Time.time >= this._stepTime)
         {
             Step();
-        }
+        }*//*
 
-        this.board.Set(this);
-    }
-    private void Step()
+        //this.boardReview.Set(this);
+    }*/
+    /*private void Step()
     {
-        this._stepTime = Time.time + this.stepDelay;
+       // this._stepTime = Time.time + this.stepDelay;
 
         Move(Vector2Int.down);
 
-        if(this._lockTime >= this.lockDelay)
+        *//*if (this._lockTime >= this.lockDelay)
         {
             Lock();
-        }
-    }
+        }*//*
+    }*/
     void Lock()
     {
-        this.board.Set(this);
-        this.board.ClearLines();
-        this.board.SpawnPiece();
+        this.boardReview.Set(this);
+        this.boardReview.ClearLines();
+        this.boardReview.SpawnPiece();
     }
     private void Movement()
     {
@@ -101,7 +101,7 @@ public class Piece : MonoBehaviour
     {
         while (Move(Vector2Int.down))
         {
-            continue;            
+            continue;
         }
         Lock();
     }
@@ -112,12 +112,12 @@ public class Piece : MonoBehaviour
         newPosition.x += translation.x;
         newPosition.y += translation.y;
 
-        bool valid = this.board.IsValidPosition(this,newPosition);
+        bool valid = this.boardReview.IsValidPosition(this, newPosition);
 
         if (valid)
         {
             this.position = newPosition;
-            this._lockTime = 0f;
+            //this._lockTime = 0f;
         }
         return valid;
     }
@@ -129,7 +129,7 @@ public class Piece : MonoBehaviour
 
         ApplyRotationMatrix(direction);
 
-        if (!TestWallKicks(this.rotationIndex,direction))
+        if (!TestWallKicks(this.rotationIndex, direction))
         {
             this.rotationIndex = originalRotation;
             ApplyRotationMatrix(-direction);
@@ -174,14 +174,15 @@ public class Piece : MonoBehaviour
             return min + (input - min) % (max - min);
         }
     }
-    
+
+
     private bool TestWallKicks(int rotationIndex, int rotationDirection)
     {
         int wallKickIndex = GetWallKickIndex(rotationIndex, rotationDirection);
 
-        for(int i=0; i < this.data.wallKicks.GetLength(1); i++) //5 test
+        for (int i = 0; i < this.data.wallKicks.GetLength(1); i++) //5 test
         {
-            Vector2Int translation = this.data.wallKicks[wallKickIndex,i];
+            Vector2Int translation = this.data.wallKicks[wallKickIndex, i];
 
             if (Move(translation))
             {
