@@ -8,8 +8,8 @@ public class Piece : MonoBehaviour
     public Vector3Int position { get; private set; }
     public int rotationIndex { get; private set; }
 
-    public float stepDelay = 1f;
-    public float lockDelay = 0.5f;
+    public float stepDelay = 5f;
+    public float lockDelay = 0.25f;
 
     private float _stepTime;
     private float _lockTime;
@@ -41,7 +41,11 @@ public class Piece : MonoBehaviour
 
         this._lockTime += Time.deltaTime;
 
-        this.Movement();
+        if (Time.timeScale == 1)
+        {
+            //this.Movement();
+        }
+        
 
         if(Time.time >= this._stepTime)
         {
@@ -54,7 +58,8 @@ public class Piece : MonoBehaviour
     {
         this._stepTime = Time.time + this.stepDelay;
 
-        Move(Vector2Int.down);
+        //Move(Vector2Int.down);
+        HardDrop();
 
         if(this._lockTime >= this.lockDelay)
         {
@@ -67,7 +72,8 @@ public class Piece : MonoBehaviour
         this.board.ClearLines();
         this.board.SpawnPiece();
     }
-    private void Movement()
+
+    /*private void Movement()
     {
         //rotate
         if (Input.GetKeyDown(KeyCode.Q))
@@ -96,7 +102,7 @@ public class Piece : MonoBehaviour
         {
             HardDrop();
         }
-    }
+    }*/
     private void HardDrop()
     {
         while (Move(Vector2Int.down))

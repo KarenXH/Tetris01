@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 
 public class Board : MonoBehaviour
@@ -7,10 +8,12 @@ public class Board : MonoBehaviour
     public Piece activePiece { get; private set; }
     public TetrominoData[] tetrominos;
     public Vector3Int spawnPosition;
-    public Vector2Int boardSize = new Vector2Int(7, 17);
+    public Vector2Int boardSize = new Vector2Int(8, 17);
 
     int firstSpawn;
     TetrominoData data;
+
+    public GameObject gameover;
 
     public RectInt Bounds
     {
@@ -49,12 +52,15 @@ public class Board : MonoBehaviour
         }
         else
         {
-            GameOver();            
-            BoardReview.Ins.GameOver();
-           
-        }
+            Time.timeScale = 0;
+            gameover.SetActive(true);
 
-       
+            //SceneManager.LoadScene("GamePlay");
+
+            /*GameOver();            
+            BoardReview.Ins.GameOver();
+            BoardReview.Ins.NextPiece();*/
+        }              
     }
     private void GameOver()
     {
