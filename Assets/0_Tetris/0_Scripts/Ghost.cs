@@ -64,7 +64,6 @@ public class Ghost : MonoBehaviour
                 break;
             }
         }
-
         mainBoard.Set(trackingPiece);
     }
 
