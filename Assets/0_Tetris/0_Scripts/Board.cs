@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
 
 public class Board : MonoBehaviour
@@ -12,9 +11,13 @@ public class Board : MonoBehaviour
 
     int firstSpawn;
     TetrominoData data;
-
     public GameObject gameover;
+    public static Tetromino dataClone1;
+    public static Tetromino dataClone2;
+    public static Tetromino dataClone3;
 
+    static Board _instance;
+    public static Board Instance { get => _instance; }
     public RectInt Bounds
     {
         get
@@ -23,7 +26,16 @@ public class Board : MonoBehaviour
             return new RectInt(position, this.boardSize);
         }
     }
+       
     public void Awake()
+    {       
+        this.InitData();
+    }
+    public void Start()
+    {
+        this.GetFirstSpawn();        
+    }
+    void InitData()
     {
         this.tilemap = GetComponentInChildren<Tilemap>();
         this.activePiece = GetComponentInChildren<Piece>();
@@ -34,45 +46,47 @@ public class Board : MonoBehaviour
         }
     }
 
-    public void Start()
+    void GetFirstSpawn()
     {
         firstSpawn = Random.Range(0, this.tetrominos.Length);
         data = this.tetrominos[firstSpawn];
+
         this.SpawnPiece();
-    }    
+    }       
     
     public void SpawnPiece()
     {
         this.activePiece.Initialize(this, this.spawnPosition, data);
 
         if (IsValidPosition(this.activePiece, this.spawnPosition)){
-            Set(this.activePiece);            
-            BoardReview.Ins.ResetNextPiece();
-            data = this.tetrominos[BoardReview.Ins.nextFirst];
+            TimeBar.Instance.AnimaBar();
+
+            Set(this.activePiece);
+            
+            BoardReview.Instance.ResetNextPiece();
+            data = this.tetrominos[BoardReview.Instance.nextFirst];
         }
         else
         {
             Time.timeScale = 0;
             gameover.SetActive(true);
-
-            //SceneManager.LoadScene("GamePlay");
-
-            /*GameOver();            
-            BoardReview.Ins.GameOver();
-            BoardReview.Ins.NextPiece();*/
         }              
     }
     private void GameOver()
     {
         this.tilemap.ClearAllTiles();
     }
-
     public void Set(Piece piece)
     {
         for (int i = 0; i < piece.cells.Length; i++)
         {           
-            Vector3Int tilePosition = piece.cells[i] + piece.position;
+            Vector3Int tilePosition = piece.cells[i] + new Vector3Int(piece.position.x, piece.position.y, 0);
             this.tilemap.SetTile(tilePosition, piece.data.tile);
+
+            /*Vector3Int tilePosition2 = piece.cells[i] + new Vector3Int(piece.position.x -3, piece.position.y - 3, 0);
+            this.tilemap.SetTile(tilePosition2, piece.data.tile);
+            Vector3Int tilePosition3 = piece.cells[i] + new Vector3Int(piece.position.x+3, piece.position.y - 7, 0);
+            this.tilemap.SetTile(tilePosition3, piece.data.tile);*/
         }
     }
     public void Clear(Piece piece)
@@ -83,7 +97,6 @@ public class Board : MonoBehaviour
             this.tilemap.SetTile(tilePosition,null);
         }
     }
-
     public bool IsValidPosition(Piece piece, Vector3Int position)
     {
         RectInt bounds = this.Bounds;

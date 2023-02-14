@@ -8,4 +8,9 @@ public class SceneCtrl : MonoBehaviour
         Time.timeScale = 1;
         SceneManager.LoadScene("GamePlay");
     }
+    public void HomeScene()
+    {
+        Time.timeScale = 1;
+        SceneManager.LoadScene("Menu");
+    }
 }
