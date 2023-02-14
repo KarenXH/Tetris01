@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class MyFingerDown : MonoBehaviour
@@ -8,4 +6,19 @@ public class MyFingerDown : MonoBehaviour
     {
         Piece.Instance.CheckClicked();
     }
+    public void MoveLeftTetris()
+    {
+        Piece.Instance.CheckMovedLeft();
+    }
+    public void MoveRightTetris()
+    {
+        Piece.Instance.CheckMovedRight();
+    }
+    public void DropTetris()
+    {
+        Piece.Instance.CheckMovedDrop();
+    }
+
+
+
 }
