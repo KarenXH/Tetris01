@@ -1,12 +1,15 @@
 using UnityEngine;
-
+using Lean.Touch;
 public class Piece : MonoBehaviour
 {
     public Board board { get; private set; }
     public TetrominoData data { get; private set; }    
     public Vector3Int[] cells { get; private set; }
     public Vector3Int position { get; private set; }
-    public int rotationIndex { get; private set; }
+    public int rotationIndex { get; private set; }    
+
+    static Piece _instance;
+    public static Piece Instance { get => _instance;}
 
     public float stepDelay = 5f;
     public float lockDelay = 0.25f;
@@ -14,6 +17,15 @@ public class Piece : MonoBehaviour
     private float _stepTime;
     private float _lockTime;
 
+    bool _isClicked = false;
+
+    Tetromino dataClone1;
+    Tetromino dataClone2;
+    Tetromino dataClone3;
+    private void Awake()
+    {
+        Piece._instance = this;
+    }
     public void Initialize(Board board,Vector3Int position, TetrominoData data)
     {
         this.board = board;
@@ -34,8 +46,24 @@ public class Piece : MonoBehaviour
             this.cells[i] = (Vector3Int) data.cells[i];
         }
     }
+    void OnEnable()
+    {
+        Lean.Touch.LeanTouch.OnFingerTap += HandleFingerTap;
+    }
+    void OnDisable()
+    {
+        Lean.Touch.LeanTouch.OnFingerTap -= HandleFingerTap;
+    }
+    void HandleFingerTap(Lean.Touch.LeanFinger finger)
+    {
+        Debug.Log("You just tapped the screen with finger " + finger.Index + " at " + finger.ScreenPosition);
+    }
 
     public void Update()
+    {
+        this.SpawnGhost();
+    }
+    void SpawnGhost()
     {
         this.board.Clear(this);
 
@@ -44,33 +72,136 @@ public class Piece : MonoBehaviour
         if (Time.timeScale == 1)
         {
             //this.Movement();
+            //this.RandomRotate();           
         }
-        
 
-        if(Time.time >= this._stepTime)
+        if (Time.time >= this._stepTime)
         {
             Step();
         }
 
         this.board.Set(this);
     }
+    
+
     private void Step()
     {
         this._stepTime = Time.time + this.stepDelay;
-
-        //Move(Vector2Int.down);
+               
         HardDrop();
 
         if(this._lockTime >= this.lockDelay)
         {
-            Lock();
+            Lock();            
         }
     }
     void Lock()
     {
+        TimeBar.Instance.ResetAnimaBar();
         this.board.Set(this);
         this.board.ClearLines();
         this.board.SpawnPiece();
+    }
+    public void HardDrop()
+    {
+        while (Move(Vector2Int.down))
+        {
+            continue;            
+        }
+        Lock();
+    }
+    private bool Move(Vector2Int translation)
+    {
+        Vector3Int newPosition = this.position;
+        newPosition.x += translation.x;
+        newPosition.y += translation.y;
+
+        bool valid = this.board.IsValidPosition(this,newPosition);
+
+        if (valid)
+        {
+            this.position = newPosition;
+            this._lockTime = 0f;
+        }
+        return valid;
+    }
+    private void Rotate(int direction)
+    {
+        int originalRotation = this.rotationIndex;
+        this.rotationIndex += Wrap(this.rotationIndex + direction, 0, 4);
+
+        ApplyRotationMatrix(direction);
+
+        if (!TestWallKicks(this.rotationIndex,direction))
+        {
+            this.rotationIndex = originalRotation;
+            ApplyRotationMatrix(-direction);
+        }
+    }
+    private void ApplyRotationMatrix(int direction)
+    {
+        for (int i = 0; i < this.data.cells.Length; i++)
+        {
+            Vector3 cell = this.cells[i];
+
+            int x, y;
+
+            dataClone1 = this.data.tetromino;
+            switch (dataClone1)
+            {
+                case Tetromino.I:
+                case Tetromino.O:
+                    cell.x -= 0.5f;
+                    cell.y -= 0.5f;
+                    x = Mathf.CeilToInt((cell.x * Data.RotationMatrix[0] * direction) + (cell.y * Data.RotationMatrix[1] * direction));
+                    y = Mathf.CeilToInt((cell.x * Data.RotationMatrix[2] * direction) + (cell.y * Data.RotationMatrix[3] * direction));
+                    break;
+                default:
+                    x = Mathf.RoundToInt((cell.x * Data.RotationMatrix[0] * direction) + (cell.y * Data.RotationMatrix[1] * direction));
+                    y = Mathf.RoundToInt((cell.x * Data.RotationMatrix[2] * direction) + (cell.y * Data.RotationMatrix[3] * direction));
+                    break;
+            }
+
+            this.cells[i] = new Vector3Int(x, y, 0);
+        }
+    }
+    private int Wrap(int input, int min, int max)
+    {
+        if (input < min)
+        {
+            return max - (min - input) % (max - min);
+        }
+        else
+        {
+            return min + (input - min) % (max - min);
+        }
+    }
+    private bool TestWallKicks(int rotationIndex, int rotationDirection)
+    {
+        int wallKickIndex = GetWallKickIndex(rotationIndex, rotationDirection);
+
+        for(int i=0; i < this.data.wallKicks.GetLength(1); i++) //5 test
+        {
+            Vector2Int translation = this.data.wallKicks[wallKickIndex,i];
+
+            if (Move(translation))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    private int GetWallKickIndex(int rotationIndex, int rotationDirection)
+    {
+        int wallKickIndex = rotationIndex * 2;
+
+        if (rotationDirection < 0)
+        {
+            wallKickIndex--;
+        }
+
+        return Wrap(wallKickIndex, 0, this.data.wallKicks.GetLength(0));//9 situation
     }
 
     /*private void Movement()
@@ -103,109 +234,30 @@ public class Piece : MonoBehaviour
             HardDrop();
         }
     }*/
-    private void HardDrop()
+
+    public void CheckClicked()
     {
-        while (Move(Vector2Int.down))
-        {
-            continue;            
-        }
-        Lock();
+        _isClicked = true;
     }
-
-    private bool Move(Vector2Int translation)
+   
+    void RandomRotate()
     {
-        Vector3Int newPosition = this.position;
-        newPosition.x += translation.x;
-        newPosition.y += translation.y;
-
-        bool valid = this.board.IsValidPosition(this,newPosition);
-
-        if (valid)
+        if (_isClicked == true)
         {
-            this.position = newPosition;
-            this._lockTime = 0f;
-        }
-        return valid;
-    }
-
-    private void Rotate(int direction)
-    {
-        int originalRotation = this.rotationIndex;
-        this.rotationIndex += Wrap(this.rotationIndex + direction, 0, 4);
-
-        ApplyRotationMatrix(direction);
-
-        if (!TestWallKicks(this.rotationIndex,direction))
-        {
-            this.rotationIndex = originalRotation;
-            ApplyRotationMatrix(-direction);
-        }
-
-    }
-
-    private void ApplyRotationMatrix(int direction)
-    {
-        for (int i = 0; i < this.data.cells.Length; i++)
-        {
-            Vector3 cell = this.cells[i];
-
-            int x, y;
-
-            switch (this.data.tetromino)
+            float a = Random.Range(-1f, 1f);
+            if (a < 0)
             {
-                case Tetromino.I:
-                case Tetromino.O:
-                    cell.x -= 0.5f;
-                    cell.y -= 0.5f;
-                    x = Mathf.CeilToInt((cell.x * Data.RotationMatrix[0] * direction) + (cell.y * Data.RotationMatrix[1] * direction));
-                    y = Mathf.CeilToInt((cell.x * Data.RotationMatrix[2] * direction) + (cell.y * Data.RotationMatrix[3] * direction));
-                    break;
-                default:
-                    x = Mathf.RoundToInt((cell.x * Data.RotationMatrix[0] * direction) + (cell.y * Data.RotationMatrix[1] * direction));
-                    y = Mathf.RoundToInt((cell.x * Data.RotationMatrix[2] * direction) + (cell.y * Data.RotationMatrix[3] * direction));
-                    break;
+                a = -1;
             }
-
-            this.cells[i] = new Vector3Int(x, y, 0);
-        }
-    }
-    private int Wrap(int input, int min, int max)
-    {
-        if (input < min)
-        {
-            return max - (min - input) % (max - min);
-        }
-        else
-        {
-            return min + (input - min) % (max - min);
-        }
-    }
-    
-    private bool TestWallKicks(int rotationIndex, int rotationDirection)
-    {
-        int wallKickIndex = GetWallKickIndex(rotationIndex, rotationDirection);
-
-        for(int i=0; i < this.data.wallKicks.GetLength(1); i++) //5 test
-        {
-            Vector2Int translation = this.data.wallKicks[wallKickIndex,i];
-
-            if (Move(translation))
+            else
             {
-                return true;
+                a = 1;
             }
+            Rotate((int)a);
+
+            _isClicked = false;
         }
-
-        return false;
     }
-    private int GetWallKickIndex(int rotationIndex, int rotationDirection)
-    {
-        int wallKickIndex = rotationIndex * 2;
 
-        if (rotationDirection < 0)
-        {
-            wallKickIndex--;
-        }
 
-        return Wrap(wallKickIndex, 0, this.data.wallKicks.GetLength(0));//9 situation
-    }
 }

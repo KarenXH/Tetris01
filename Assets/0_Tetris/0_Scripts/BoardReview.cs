@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class BoardReview : Singleton<BoardReview>
+public class BoardReview : MonoBehaviour
 {
     public Tilemap tilemap { get; private set; }
     public PieceReview activePiece { get; private set; }
@@ -20,19 +20,21 @@ public class BoardReview : Singleton<BoardReview>
         }
     }
 
-   
+    private static BoardReview _instance;
+    public static BoardReview Instance { get => _instance; }
 
     public int nextFirst;
     public int nextSecond;
     public int nextThird;
-    [SerializeField] private BoardReview _instance;
-    public BoardReview Instance { get => _instance; set => _instance = value; }
-
-
-    public override void Awake()
+   
+    public void Awake()
     {
-        /*if (_instance == null)
-            _instance = FindObjectOfType(typeof(BoardReview)) as BoardReview;*/
+        this.InitData();
+    }
+
+    void InitData()
+    {
+        BoardReview._instance = this;
 
         this.tilemap = GetComponentInChildren<Tilemap>();
         this.activePiece = GetComponentInChildren<PieceReview>();
@@ -43,7 +45,6 @@ public class BoardReview : Singleton<BoardReview>
         }
         this.NextPiece();
     }
-
 
     public void LateUpdate()
     {        
