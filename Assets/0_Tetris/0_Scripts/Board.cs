@@ -12,9 +12,8 @@ public class Board : MonoBehaviour
     int firstSpawn;
     TetrominoData data;
     public GameObject gameover;
-    public static Tetromino dataClone1;
-    public static Tetromino dataClone2;
-    public static Tetromino dataClone3;
+    public GameObject touchRange;
+    
 
     static Board _instance;
     public static Board Instance { get => _instance; }
@@ -70,6 +69,7 @@ public class Board : MonoBehaviour
         {
             Time.timeScale = 0;
             gameover.SetActive(true);
+            touchRange.SetActive(false);
         }              
     }
     private void GameOver()

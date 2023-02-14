@@ -31,7 +31,7 @@ public class Ghost : MonoBehaviour
             Vector3Int tilePosition = cells[i] + position;
             tilemap.SetTile(tilePosition, null);
         }
-        for (int i = 0; i < cells.Length; i++)
+        /*for (int i = 0; i < cells.Length; i++)
         {
             Vector3Int tilePosition1 = cells[i] + new Vector3Int(position.x - 3, position.y, 0);
             tilemap.SetTile(tilePosition1, null);
@@ -40,7 +40,7 @@ public class Ghost : MonoBehaviour
         {
             Vector3Int tilePosition2 = cells[i] + new Vector3Int(position.x +3 , position.y, 0);
             tilemap.SetTile(tilePosition2, null);
-        }
+        }*/
     }
 
     private void Copy()
@@ -87,11 +87,11 @@ public class Ghost : MonoBehaviour
             tilemap.SetTile(tilePosition, tile);
         }
     }
-   /* private void Set1()
+    /*private void Set1()
     {
         for (int i = 0; i < cells.Length; i++)
         {
-            Vector3Int tilePosition1 = cells[i] + new Vector3Int(position.x-3, position.y, 0);
+            Vector3Int tilePosition1 = cells[i] + new Vector3Int(position.x - 3, position.y, 0);
             tilemap.SetTile(tilePosition1, tile);
         }
     }
@@ -99,7 +99,7 @@ public class Ghost : MonoBehaviour
     {
         for (int i = 0; i < cells.Length; i++)
         {
-            Vector3Int tilePosition2 = cells[i] + new Vector3Int(position.x+3, position.y, 0);
+            Vector3Int tilePosition2 = cells[i] + new Vector3Int(position.x + 3, position.y, 0);
             tilemap.SetTile(tilePosition2, tile);
         }
     }*/

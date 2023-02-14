@@ -1,5 +1,4 @@
 using UnityEngine;
-using Lean.Touch;
 public class Piece : MonoBehaviour
 {
     public Board board { get; private set; }
@@ -18,10 +17,12 @@ public class Piece : MonoBehaviour
     private float _lockTime;
 
     bool _isClicked = false;
+    bool _isMovedLeft = false;
+    bool _isMovedRight = false;
+    bool _isMovedDrop = false;
 
     Tetromino dataClone1;
-    Tetromino dataClone2;
-    Tetromino dataClone3;
+    
     private void Awake()
     {
         Piece._instance = this;
@@ -45,19 +46,7 @@ public class Piece : MonoBehaviour
         {
             this.cells[i] = (Vector3Int) data.cells[i];
         }
-    }
-    void OnEnable()
-    {
-        Lean.Touch.LeanTouch.OnFingerTap += HandleFingerTap;
-    }
-    void OnDisable()
-    {
-        Lean.Touch.LeanTouch.OnFingerTap -= HandleFingerTap;
-    }
-    void HandleFingerTap(Lean.Touch.LeanFinger finger)
-    {
-        Debug.Log("You just tapped the screen with finger " + finger.Index + " at " + finger.ScreenPosition);
-    }
+    }    
 
     public void Update()
     {
@@ -71,8 +60,8 @@ public class Piece : MonoBehaviour
 
         if (Time.timeScale == 1)
         {
-            //this.Movement();
-            //this.RandomRotate();           
+            this.Movement();
+            this.RandomRotate();           
         }
 
         if (Time.time >= this._stepTime)
@@ -204,42 +193,61 @@ public class Piece : MonoBehaviour
         return Wrap(wallKickIndex, 0, this.data.wallKicks.GetLength(0));//9 situation
     }
 
-    /*private void Movement()
+    private void Movement()
     {
         //rotate
-        if (Input.GetKeyDown(KeyCode.Q))
+        /*if (Input.GetKeyDown(KeyCode.Q))
         {
             Rotate(-1);
         }
         else if (Input.GetKeyDown(KeyCode.E))
         {
             Rotate(1);
-        }
+        }*/
         //movement
-        if (Input.GetKeyDown(KeyCode.A))
+        if(_isMovedLeft == true)
         {
             Move(Vector2Int.left);
+            _isMovedLeft = false;
         }
-        else if (Input.GetKeyDown(KeyCode.D))
+        if(_isMovedRight == true)
         {
             Move(Vector2Int.right);
+            _isMovedRight = false;
         }
+        if(_isMovedDrop == true)
+        {
+            this.HardDrop();
+            _isMovedDrop = false;
+        }
+        
 
-        if (Input.GetKeyDown(KeyCode.S))
+        /*if (Input.GetKeyDown(KeyCode.S))
         {
             Move(Vector2Int.down);
         }
         if (Input.GetKeyDown(KeyCode.Space))
         {
             HardDrop();
-        }
-    }*/
+        }*/
+    }
 
     public void CheckClicked()
     {
         _isClicked = true;
-    }
-   
+    } 
+    public void CheckMovedLeft()
+    {
+        _isMovedLeft = true;
+    } 
+    public void CheckMovedRight()
+    {
+        _isMovedRight = true;
+    } 
+    public void CheckMovedDrop()
+    {
+        _isMovedDrop = true;
+    }   
     void RandomRotate()
     {
         if (_isClicked == true)
